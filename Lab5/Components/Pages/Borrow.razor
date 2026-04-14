@@ -1,0 +1,112 @@
+@page "/borrow"
+@using Lab5.Models
+@using Lab5.Services
+@inject ILibraryService LibraryService
+@rendermode InteractiveServer
+
+<h3>Borrow / Return Books</h3>
+
+<h5>Borrow a Book</h5>
+<div>
+    <label>Select User:</label>
+    <select @bind="selectedBorrowUserId">
+        <option value="0">-- Select User --</option>
+        @foreach (var user in LibraryService.GetUsers()) {
+            <option value="@user.Id">@user.Name</option>
+        }
+    </select>
+
+    <label>Select Book:</label>
+    <select @bind="selectedBorrowBookId">
+        <option value="0">-- Select Book --</option>
+        @foreach (var book in LibraryService.GetBooks()) {
+            <option value="@book.Id">@book.Title by @book.Author</option>
+        }
+    </select>
+
+    <button @onclick="BorrowBook">Borrow</button>
+    @if (!string.IsNullOrEmpty(borrowMessage)) {
+        <span> @borrowMessage</span>
+    }
+</div>
+
+<hr />
+
+<h5>Return a Book</h5>
+<div>
+    <label>Select User:</label>
+    <select @bind="selectedReturnUserId">
+        <option value="0">-- Select User --</option>
+        @foreach (var user in LibraryService.GetUsers()) {
+            <option value="@user.Id">@user.Name</option>
+        }
+    </select>
+</div>
+
+@{
+    var borrowed = GetBorrowedForUser(selectedReturnUserId);
+}
+
+@if (borrowed.Count > 0) {
+    <table border="1" cellpadding="4" cellspacing="0">
+        <thead>
+            <tr><th>Title</th><th>Author</th><th>ISBN</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < borrowed.Count; i++) {
+                int index = i;
+                <tr>
+                    <td>@borrowed[i].Title</td>
+                    <td>@borrowed[i].Author</td>
+                    <td>@borrowed[i].ISBN</td>
+                    <td><button @onclick="() => ReturnBook(selectedReturnUserId, index)">Return</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+} else if (selectedReturnUserId != 0) {
+    <p>No borrowed books for this user.</p>
+}
+
+<hr />
+
+<h5>All Borrowed Books</h5>
+@foreach (var entry in LibraryService.GetBorrowedBooks()) {
+    var user = LibraryService.GetUsers().FirstOrDefault(u => u.Id == entry.Key);
+    if (user != null)
+    {
+        <p><strong>@user.Name:</strong> @string.Join(", ", entry.Value.Select(b => b.Title))</p>
+    }
+}
+
+
+
+
+
+
+@code {
+    int selectedBorrowUserId = 0;
+    int selectedBorrowBookId = 0;
+    int selectedReturnUserId = 0;
+    string borrowMessage = "";
+
+    List<Book> GetBorrowedForUser(int userId) {
+        var dict = LibraryService.GetBorrowedBooks();
+        return dict.ContainsKey(userId) ? dict[userId] : new List<Book>();
+}
+
+    void BorrowBook() {
+        borrowMessage = "";
+        if (selectedBorrowUserId == 0 || selectedBorrowBookId == 0) {
+            borrowMessage = "Please select both a user and a book.";
+            return;
+        }
+        LibraryService.BorrowBook(selectedBorrowUserId, selectedBorrowBookId);
+        borrowMessage = "Book borrowed successfully!";
+        selectedBorrowBookId = 0;
+    }
+
+    void ReturnBook(int userId, int bookIndex) {
+        LibraryService.ReturnBook(userId, bookIndex);
+    }
+}

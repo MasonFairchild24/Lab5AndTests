@@ -1,0 +1,71 @@
+@page "/users"
+@using Lab5.Models
+@using Lab5.Services
+@inject ILibraryService LibraryService
+@rendermode InteractiveServer
+
+<h3>Manage Users</h3>
+
+<h5>@(editingUser == null ? "Add New User" : "Edit User")</h5>
+<div>
+    <input placeholder="Name" @bind="formName" />
+    <input placeholder="Email" @bind="formEmail" />
+    @if (editingUser == null) {
+        <button @onclick="AddUser">Add User</button>
+    } else {
+        <button @onclick="SaveEdit">Save</button>
+        <button @onclick="CancelEdit">Cancel</button>
+    }
+</div>
+
+<br />
+<table border="1" cellpadding="4" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in LibraryService.GetUsers()) {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.Name</td>
+                <td>@user.Email</td>
+                <td>
+                    <button @onclick="() => StartEdit(user)">Edit</button>
+                    <button @onclick="() => DeleteUser(user.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    string formName = "", formEmail = "";
+    User? editingUser = null;
+
+    void AddUser() {
+        if (string.IsNullOrWhiteSpace(formName)) return;
+        LibraryService.AddUser(new User { Name = formName, Email = formEmail });
+        formName = formEmail = "";
+    }
+
+    void StartEdit(User user) {
+        editingUser = user;
+        formName = user.Name;
+        formEmail = user.Email;
+    }
+
+    void SaveEdit() {
+        if (editingUser == null) return;
+        LibraryService.EditUser(new User { Id = editingUser.Id, Name = formName, Email = formEmail });
+        CancelEdit();
+    }
+
+    void CancelEdit() {
+        editingUser = null;
+        formName = formEmail = "";
+    }
+
+    void DeleteUser(int id) => LibraryService.DeleteUser(id);
+}

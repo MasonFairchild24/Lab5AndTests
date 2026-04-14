@@ -1,0 +1,86 @@
+@page "/books"
+@using Lab5.Models
+@using Lab5.Services
+@inject ILibraryService LibraryService
+@rendermode InteractiveServer
+
+<h3>Manage Books</h3>
+
+<h5>@(editingBook == null ? "Add New Book" : "Edit Book")</h5>
+<div>
+    <input placeholder="Title" @bind="formTitle" />
+    <input placeholder="Author" @bind="formAuthor" />
+    <input placeholder="ISBN" @bind="formISBN" />
+    @if (editingBook == null) {
+        <button @onclick="AddBook">Add Book</button>
+    } else {
+        <button @onclick="SaveEdit">Save</button>
+        <button @onclick="CancelEdit">Cancel</button>
+    }
+</div>
+
+
+
+<br />
+<table border="1" cellpadding="4" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th><th>Title</th><th>Author</th><th>ISBN</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in LibraryService.GetBooks()) {
+            <tr>
+                <td>@book.Id</td>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>@book.ISBN</td>
+                <td>
+                    <button @onclick="() => StartEdit(book)">Edit</button>
+                    <button @onclick="() => DeleteBook(book.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+@code {
+    string formTitle = "", formAuthor = "", formISBN = "";
+    Book? editingBook = null;
+
+    void AddBook() {
+        if (string.IsNullOrWhiteSpace(formTitle)) return;
+        LibraryService.AddBook(new Book { Title = formTitle, Author = formAuthor, ISBN = formISBN });
+        formTitle = formAuthor = formISBN = "";
+    }
+
+    void StartEdit(Book book) {
+        editingBook = book;
+        formTitle = book.Title;
+        formAuthor = book.Author;
+        formISBN = book.ISBN;
+    }
+
+    void SaveEdit() {
+        if (editingBook == null) return;
+        LibraryService.EditBook(new Book { Id = editingBook.Id, Title = formTitle, Author = formAuthor, ISBN = formISBN });
+        CancelEdit();
+    }
+
+    void CancelEdit() {
+        editingBook = null;
+        formTitle = formAuthor = formISBN = "";
+    }
+
+    void DeleteBook(int id) => LibraryService.DeleteBook(id);
+}
