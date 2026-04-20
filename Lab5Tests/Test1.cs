@@ -21,7 +21,7 @@ namespace Lab5Tests
             service.AddBook(book);
 
             //Assert (Make sure it happened and got the right results)
-            Assert.AreEqual(1, service.GetBooks().Count);
+            Assert.AreEqual(99, service.GetBooks().Count);
             Assert.AreEqual("Some Random Novel", service.GetBooks()[0].Title);
         }
 
