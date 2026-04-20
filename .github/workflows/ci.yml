@@ -26,10 +26,10 @@ jobs:
         dotnet-version: ${{ matrix.dotnet }}
 
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore Lab5Tests/Lab5Tests.csproj
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build Lab5Tests/Lab5Tests.csproj --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test Lab5Tests/Lab5Tests.csproj --no-restore --verbosity normal
